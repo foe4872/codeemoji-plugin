@@ -4,8 +4,10 @@ import codeemoji.core.collector.simple.CEVariableCollector;
 import codeemoji.core.provider.CEProvider;
 import com.intellij.codeInsight.hints.ImmediateConfigurable;
 import com.intellij.codeInsight.hints.InlayHintsCollector;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.psi.PsiVariable;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -40,6 +42,9 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
             @Override
             public boolean needsHint(@NotNull PsiVariable element, @NotNull Map<?, ?> externalInfo) {
                 if (null != element.getNameIdentifier()) {
+                    if (!CheckScopeLineCounter(element)){
+                        return false;
+                    }
                     return getSettings().getNumberOfLetters() >= element.getNameIdentifier().getTextLength();
                 }
                 return false;
@@ -51,4 +56,44 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
     public @NotNull ImmediateConfigurable createConfigurable(@NotNull ShortDescriptiveNameSettings settings) {
         return new ShortDescriptiveNameConfigurable(settings);
     }
+
+    public boolean CheckScopeLineCounter(@NotNull PsiVariable _psiVariable){
+        PsiVariable psiVariable = _psiVariable;
+        boolean isBigScope = false;
+
+        // Traverse the PSI tree to find the enclosing block, method, or class
+        PsiElement currentElement = psiVariable;
+        while (currentElement != null) {
+            if (currentElement instanceof PsiCodeBlock || currentElement instanceof PsiMethod || currentElement instanceof PsiClass) {
+                break;
+            }
+            currentElement = currentElement.getParent();
+        }
+
+        if (currentElement != null) {
+            // Get the start and end offsets of the enclosing element
+            int startOffset = currentElement.getTextRange().getStartOffset();
+            int endOffset = currentElement.getTextRange().getEndOffset();
+
+            // Get the document corresponding to the PsiFile
+            PsiFile psiFile = currentElement.getContainingFile();
+            Document document = FileDocumentManager.getInstance().getDocument(psiFile.getVirtualFile());
+
+            if (document != null) {
+                // Calculate the start and end line numbers
+                int startLine = document.getLineNumber(startOffset);
+                int endLine = document.getLineNumber(endOffset);
+
+                // Calculate the number of lines over which the variable is in scope
+                int numLines = endLine - startLine + 1;
+
+                System.out.println("The variable "+ psiVariable.getNameIdentifier().getText() + " is in scope for " + numLines + " lines.");
+                if(numLines >= getSettings().getBigScope()){
+                    isBigScope = true;
+                }
+            }
+        }
+        return isBigScope;
+    }
+
 }

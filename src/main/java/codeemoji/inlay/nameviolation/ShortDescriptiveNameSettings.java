@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class ShortDescriptiveNameSettings implements PersistentStateComponent<ShortDescriptiveNameSettings> {
 
     private int numberOfLetters = 1;
+    private int bigScope = 10;
 
     @Override
     public ShortDescriptiveNameSettings getState() {
