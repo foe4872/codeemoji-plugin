@@ -9,9 +9,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.psi.*;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.Map;
-
 import static codeemoji.inlay.nameviolation.NameViolationSymbols.SMALL_NAME;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -87,7 +85,7 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
                 // Calculate the number of lines over which the variable is in scope
                 int numLines = endLine - startLine + 1;
 
-                System.out.println("The variable "+ psiVariable.getNameIdentifier().getText() + " is in scope for " + numLines + " lines.");
+                //System.out.println("The variable "+ psiVariable.getNameIdentifier().getText() + " is in scope for " + numLines + " lines.");
                 if(numLines >= getSettings().getBigScope()){
                     isBigScope = true;
                 }

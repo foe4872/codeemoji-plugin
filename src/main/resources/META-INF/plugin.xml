@@ -57,5 +57,7 @@
                                    implementationClass="codeemoji.inlay.showingspecifics.ShowingSpecifics"/>
         <codeInsight.inlayProvider language="JAVA"
                                    implementationClass="codeemoji.inlay.implicit.ImplicitAnnotations"/>
+        <codeInsight.inlayProvider language="JAVA"
+                                   implementationClass="codeemoji.inlay.nameviolation.VariableSimilarName"/>
     </extensions>
 </idea-plugin>
