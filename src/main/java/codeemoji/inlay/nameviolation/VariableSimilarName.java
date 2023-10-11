@@ -30,8 +30,10 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
             public boolean needsHint(@NotNull PsiVariable element, @NotNull Map<?, ?> externalInfo) {
                 String currentVarName = element.getName();
                 for (String otherVarName : variableNames) {
-                    if (areInvertedCamelCases(currentVarName, otherVarName)) {
-                        System.out.println("The variable " + currentVarName + " has inverted camel case with " + otherVarName);
+                    if (areInvertedCamelCases(currentVarName, otherVarName) ||
+                            hasSameBaseWithDifferentNumericSuffix(currentVarName, otherVarName)) {
+                        System.out.println("The variable " + currentVarName + " is similar to " + otherVarName);
+                        variableNames.add(currentVarName);  // Ensure the current variable name is added to the set
                         return true;
                     }
                 }
@@ -61,6 +63,12 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
                     words.add(currentWord.toString());
                 }
                 return words;
+            }
+
+            private boolean hasSameBaseWithDifferentNumericSuffix(String name1, String name2) {
+                String base1 = name1.replaceAll("\\d+", "");
+                String base2 = name2.replaceAll("\\d+", "");
+                return base1.equals(base2) && !name1.equals(name2);
             }
 
         };
