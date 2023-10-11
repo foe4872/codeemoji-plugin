@@ -55,14 +55,17 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
         return new ShortDescriptiveNameConfigurable(settings);
     }
 
-    public boolean CheckScopeLineCounter(@NotNull PsiVariable _psiVariable){
+    public boolean CheckScopeLineCounter(@NotNull PsiVariable _psiVariable) {
         PsiVariable psiVariable = _psiVariable;
         boolean isBigScope = false;
 
-        // Traverse the PSI tree to find the enclosing block, method, or class
+        // Traverse the PSI tree to find the enclosing block, method, class or catch section
         PsiElement currentElement = psiVariable;
         while (currentElement != null) {
-            if (currentElement instanceof PsiCodeBlock || currentElement instanceof PsiMethod || currentElement instanceof PsiClass) {
+            if (currentElement instanceof PsiCodeBlock
+                    || currentElement instanceof PsiMethod
+                    || currentElement instanceof PsiClass
+                    || currentElement instanceof PsiCatchSection) {  // Add this line
                 break;
             }
             currentElement = currentElement.getParent();
@@ -86,12 +89,13 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
                 int numLines = endLine - startLine + 1;
 
                 //System.out.println("The variable "+ psiVariable.getNameIdentifier().getText() + " is in scope for " + numLines + " lines.");
-                if(numLines >= getSettings().getBigScope()){
+                if(numLines >= getSettings().getBigScope()) {
                     isBigScope = true;
                 }
             }
         }
         return isBigScope;
     }
+
 
 }
