@@ -11,7 +11,6 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.java</depends>
-
     <extensions defaultExtensionNs="com.intellij">
 
         <!--suppress PluginXmlCapitalization -->
@@ -19,10 +18,13 @@
                                  instance="codeemoji.core.config.CEGlobalConfigurable"/>
         <applicationService serviceImplementation="codeemoji.core.config.CEGlobalSettings"/>
         <postStartupActivity implementation="codeemoji.core.external.CEExternalAnalyzerStartup"/>
+        <postStartupActivity implementation="codeemoji.inlay.teamconsistency.WriteVariablesInXML"/>
         <applicationService serviceImplementation="codeemoji.inlay.nameviolation.ShortDescriptiveNameSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.showingmodifiers.ShowingModifiersSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.showingspecifics.ShowingSpecificsSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.implicit.ImplicitAnnotationsSettings"/>
+        <editorFactoryListener implementation="codeemoji.inlay.nameviolation.VariableSimilarNameGlobal"/>
+
         <codeInsight.inlayProvider language="JAVA"
                                    implementationClass="codeemoji.inlay.nameviolation.ShortDescriptiveName"/>
         <codeInsight.inlayProvider language="JAVA"

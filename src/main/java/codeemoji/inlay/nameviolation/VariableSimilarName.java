@@ -14,8 +14,18 @@ import static codeemoji.inlay.nameviolation.NameViolationSymbols.POOP;
 
 @SuppressWarnings("UnstableApiUsage")
 public class VariableSimilarName extends CEProvider<NoSettings> {
-
     private final Set<String> variableNames = new HashSet<>();
+    private final Map<String, List<String>> synonymDictionary = new HashMap<>();
+    public Set<String> getCollectedVariableNames() {
+        return variableNames;
+    }
+
+    public VariableSimilarName() {
+        synonymDictionary.put("cost", Arrays.asList("price", "charge", "fee"));
+        synonymDictionary.put("animal", Arrays.asList("beast", "creature"));
+        synonymDictionary.put("car", Arrays.asList("vehicle", "automobile", "machine"));
+        // hier weitere Synonyme hinzufügen ...
+    }
 
     @Override
     public String getPreviewText() {
@@ -31,9 +41,9 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
                 String currentVarName = element.getName();
                 for (String otherVarName : variableNames) {
                     if (areInvertedCamelCases(currentVarName, otherVarName) ||
+                            hasSynonymousParts(currentVarName, otherVarName) ||
                             hasSameBaseWithDifferentNumericSuffix(currentVarName, otherVarName)) {
                         System.out.println("The variable " + currentVarName + " is similar to " + otherVarName);
-                        variableNames.add(currentVarName);  // Ensure the current variable name is added to the set
                         return true;
                     }
                 }
@@ -65,6 +75,25 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
                 return words;
             }
 
+            private boolean areSynonyms(String word1, String word2) {
+                return synonymDictionary.getOrDefault(word1, Collections.emptyList()).contains(word2) ||
+                        synonymDictionary.getOrDefault(word2, Collections.emptyList()).contains(word1);
+            }
+
+            private boolean hasSynonymousParts(String name1, String name2) {
+                List<String> partsName1 = splitCamelCase(name1);
+                List<String> partsName2 = splitCamelCase(name2);
+
+                for (String part1 : partsName1) {
+                    for (String part2 : partsName2) {
+                        if (areSynonyms(part1, part2)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
             private boolean hasSameBaseWithDifferentNumericSuffix(String name1, String name2) {
                 String base1 = name1.replaceAll("\\d+", "");
                 String base2 = name2.replaceAll("\\d+", "");
@@ -72,9 +101,5 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
             }
 
         };
-    }
-
-    public Set<String> getCollectedVariableNames() {
-        return variableNames;
     }
 }
