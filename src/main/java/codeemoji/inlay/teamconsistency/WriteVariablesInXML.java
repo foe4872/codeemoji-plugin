@@ -32,17 +32,9 @@ public class WriteVariablesInXML implements StartupActivity {
 
     @Override
     public void runActivity(@NotNull Project project) {
-        System.out.println("WriteVariablesInXML runActivity");
-
         createXMLFile();
-        System.out.println("WriteVariablesInXML createXMLFile");
-
         List<JavaFileData> changedFiles = collectProjectVariables(project);
-        System.out.println("WriteVariablesInXML collectProjectVariables");
-
         writeToXML(changedFiles);
-        System.out.println("WriteVariablesInXML writeToXML");
-
     }
 
     private List<JavaFileData> readExistingXML() {
@@ -76,6 +68,7 @@ public class WriteVariablesInXML implements StartupActivity {
             DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
             Document document;
             File xmlFile = new File(outputPath);
+
             if (xmlFile.exists()) {
                 document = documentBuilder.parse(xmlFile);
             } else {
@@ -87,6 +80,7 @@ public class WriteVariablesInXML implements StartupActivity {
             for (JavaFileData javaFileData : changedData) {
                 NodeList existingFileNodes = document.getElementsByTagName("file");
                 Element matchingFileElement = null;
+
                 for (int i = 0; i < existingFileNodes.getLength(); i++) {
                     Element currentFileElement = (Element) existingFileNodes.item(i);
                     if (currentFileElement.getAttribute("name").equals(javaFileData.getFileName())) {
@@ -96,7 +90,6 @@ public class WriteVariablesInXML implements StartupActivity {
                 }
 
                 if (matchingFileElement != null) {
-                    // Datei existiert bereits, entfernen Sie sie, um sie mit den aktualisierten Daten zu ersetzen
                     matchingFileElement.getParentNode().removeChild(matchingFileElement);
                 }
 
@@ -115,7 +108,7 @@ public class WriteVariablesInXML implements StartupActivity {
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
             DOMSource domSource = new DOMSource(document);
             StreamResult streamResult = new StreamResult(xmlFile);
             transformer.transform(domSource, streamResult);
@@ -143,9 +136,9 @@ public class WriteVariablesInXML implements StartupActivity {
         if (psiDirectory != null) {
             psiDirectory.acceptChildren(new PsiRecursiveElementVisitor() {
                 @Override
-                public void visitFile(PsiFile file) {   // Änderung hier: von visitElement zu visitFile
-                    if (file instanceof PsiJavaFile) {
-                        VirtualFile virtualFile = file.getVirtualFile();
+                public void visitFile(PsiFile file) {
+                    VirtualFile virtualFile = file.getVirtualFile();
+                    if (file instanceof PsiJavaFile && "java".equalsIgnoreCase(virtualFile.getExtension())) {
                         long timeStamp = virtualFile.getTimeStamp();
                         Date lastModifiedDate = new Date(timeStamp);
                         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
@@ -164,15 +157,17 @@ public class WriteVariablesInXML implements StartupActivity {
                             javaFiles.add(javaFileData);
 
                             // Variablen für diese Java-Datei sammeln
-                            for (PsiElement element : file.getChildren()) {
-                                if (element instanceof PsiVariable) {
-                                    PsiVariable variable = (PsiVariable) element;
-                                    javaFileData.addVariable(variable.getName());
+                            if (file instanceof PsiJavaFile) {
+                                for (PsiClass psiClass : ((PsiJavaFile) file).getClasses()) {
+                                    for (PsiField psiField : psiClass.getFields()) {
+                                        javaFileData.addVariable(psiField.getName());
+                                    }
                                 }
                             }
+
                         }
                     }
-                    super.visitFile(file);  // Änderung hier: von super.visitElement(element) zu super.visitFile(file)
+                    super.visitFile(file);
                 }
             });
         }
@@ -211,6 +206,8 @@ public class WriteVariablesInXML implements StartupActivity {
                 e.printStackTrace();
                 System.err.println("Fehler beim Erstellen der XML-Datei: " + e.getMessage());
             }
+        }else {
+            System.out.println("XML-Datei existiert bereits: " + outputPath);
         }
     }
 }
