@@ -14,50 +14,92 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import com.intellij.psi.PsiDirectory;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.PsiVariable;
-import com.intellij.psi.PsiRecursiveElementVisitor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
+import java.util.Optional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class WriteVariablesInXML implements StartupActivity {
+    private final String path = "C:\\Users\\furka_bas98d7\\OneDrive - FH Vorarlberg\\Bachelorarbeit\\1_testProject";
+    private final String outputPath = path + File.separator + "Variables.xml";
 
-    String path = "C:\\Users\\furka_bas98d7\\OneDrive - FH Vorarlberg\\Bachelorarbeit\\1_testProject";
     @Override
     public void runActivity(@NotNull Project project) {
-        System.out.println("test WriteVariablesInXML");
-        createXMLFile();
-        // Hier speichern wir alle Projekt-Variablen als JavaFileDate-Objekt in eine Liste ab
-        //JavaFileData weil Inhalt von Javadatei und das Datum davon ausgelesen wird
-        List<JavaFileData> collectedData = collectProjectVariables(project);
+        System.out.println("WriteVariablesInXML runActivity");
 
-        // Die gesammelte Datenliste in die XML-Datei schreiben
-        writeToXML(collectedData);
+        createXMLFile();
+        System.out.println("WriteVariablesInXML createXMLFile");
+
+        List<JavaFileData> changedFiles = collectProjectVariables(project);
+        System.out.println("WriteVariablesInXML collectProjectVariables");
+
+        writeToXML(changedFiles);
+        System.out.println("WriteVariablesInXML writeToXML");
+
     }
 
-    public void writeToXML(List<JavaFileData> collectedData) {
+    private List<JavaFileData> readExistingXML() {
+        List<JavaFileData> existingData = new ArrayList<>();
+        try {
+            File xmlFile = new File(outputPath);
+            if (!xmlFile.exists()) return existingData;
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(xmlFile);
+
+            NodeList fileNodes = doc.getElementsByTagName("file");
+            for (int i = 0; i < fileNodes.getLength(); i++) {
+                Element fileElement = (Element) fileNodes.item(i);
+                String fileName = fileElement.getAttribute("name");
+                String lastModified = fileElement.getAttribute("lastModified");
+
+                JavaFileData javaFileData = new JavaFileData(fileName, lastModified);
+                existingData.add(javaFileData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return existingData;
+    }
+
+    public void writeToXML(List<JavaFileData> changedData) {
         try {
             DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
+            Document document;
+            File xmlFile = new File(outputPath);
+            if (xmlFile.exists()) {
+                document = documentBuilder.parse(xmlFile);
+            } else {
+                document = documentBuilder.newDocument();
+                Element rootElement = document.createElement("project");
+                document.appendChild(rootElement);
+            }
 
-            // Wurzelelement erstellen
-            Document document = documentBuilder.newDocument();
-            Element root = document.createElement("project");
-            document.appendChild(root);
+            for (JavaFileData javaFileData : changedData) {
+                NodeList existingFileNodes = document.getElementsByTagName("file");
+                Element matchingFileElement = null;
+                for (int i = 0; i < existingFileNodes.getLength(); i++) {
+                    Element currentFileElement = (Element) existingFileNodes.item(i);
+                    if (currentFileElement.getAttribute("name").equals(javaFileData.getFileName())) {
+                        matchingFileElement = currentFileElement;
+                        break;
+                    }
+                }
 
-            // Daten in XML-Format umwandeln
-            for (JavaFileData javaFileData : collectedData) {
+                if (matchingFileElement != null) {
+                    // Datei existiert bereits, entfernen Sie sie, um sie mit den aktualisierten Daten zu ersetzen
+                    matchingFileElement.getParentNode().removeChild(matchingFileElement);
+                }
+
                 Element fileElement = document.createElement("file");
                 fileElement.setAttribute("name", javaFileData.getFileName());
                 fileElement.setAttribute("lastModified", javaFileData.getLastModified());
@@ -68,55 +110,90 @@ public class WriteVariablesInXML implements StartupActivity {
                     fileElement.appendChild(variableElement);
                 }
 
-                root.appendChild(fileElement);
+                document.getDocumentElement().appendChild(fileElement);
             }
 
-            // In XML-Datei schreiben
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource domSource = new DOMSource(document);
-
-            // Hier setzen Sie den Pfad und den Namen der XML-Datei.
-            String outputPath = path+ File.separator + "Variables.xml";
-            StreamResult streamResult = new StreamResult(new File(outputPath));
-
+            StreamResult streamResult = new StreamResult(xmlFile);
             transformer.transform(domSource, streamResult);
 
-            System.out.println("XML-Datei wurde erfolgreich erstellt!");
+            if (changedData.isEmpty()) {
+                System.out.println("Keine Änderungen vorhanden. XML-Datei wurde nicht aktualisiert.");
+            } else {
+                System.out.println("XML-Datei wurde erfolgreich aktualisiert!");
+            }
 
-        } catch (ParserConfigurationException | TransformerException pce) {
-            pce.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Fehler beim Schreiben in die XML-Datei: " + e.getMessage());
         }
+    }
+
+
+    public List<JavaFileData> collectProjectVariables(Project project) {
+        List<JavaFileData> javaFiles = new ArrayList<>();
+        List<JavaFileData> existingFiles = readExistingXML();
+        PsiManager psiManager = PsiManager.getInstance(project);
+        VirtualFile baseDir = project.getBaseDir();
+        PsiDirectory psiDirectory = psiManager.findDirectory(baseDir);
+
+        if (psiDirectory != null) {
+            psiDirectory.acceptChildren(new PsiRecursiveElementVisitor() {
+                @Override
+                public void visitFile(PsiFile file) {   // Änderung hier: von visitElement zu visitFile
+                    if (file instanceof PsiJavaFile) {
+                        VirtualFile virtualFile = file.getVirtualFile();
+                        long timeStamp = virtualFile.getTimeStamp();
+                        Date lastModifiedDate = new Date(timeStamp);
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                        String formattedDate = sdf.format(lastModifiedDate);
+
+                        Optional<JavaFileData> matchingExistingFile = existingFiles.stream()
+                                .filter(jfd -> jfd.getFileName().equals(virtualFile.getName()))
+                                .findFirst();
+
+                        if (!matchingExistingFile.isPresent() ||
+                                (matchingExistingFile.isPresent() && !matchingExistingFile.get().getLastModified().equals(formattedDate))) {
+
+                            System.out.println("Abweichung identifiziert für Datei: " + virtualFile.getName());
+
+                            JavaFileData javaFileData = new JavaFileData(virtualFile.getName(), formattedDate);
+                            javaFiles.add(javaFileData);
+
+                            // Variablen für diese Java-Datei sammeln
+                            for (PsiElement element : file.getChildren()) {
+                                if (element instanceof PsiVariable) {
+                                    PsiVariable variable = (PsiVariable) element;
+                                    javaFileData.addVariable(variable.getName());
+                                }
+                            }
+                        }
+                    }
+                    super.visitFile(file);  // Änderung hier: von super.visitElement(element) zu super.visitFile(file)
+                }
+            });
+        }
+
+        return javaFiles;
     }
 
     public void createXMLFile() {
         ProjectManager projectManager = ProjectManager.getInstance();
-        //PsiManager psiManager = PsiManager.getInstance(projectManager.getDefaultProject());
-
-        // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
         Project[] openProjects = projectManager.getOpenProjects();
         String projectPath;
 
         if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
             projectPath = openProjects[0].getBasePath();
         } else {
-            // Verwenden Sie den hardcodierten Pfad als Fallback, weil in Testumgebung es keine openProjects[0].getBasePath() gibt
-            // das muss dann rausgenommen werden bevor es veröffentlicht wird
             projectPath = path;
         }
         String outputPath = projectPath + File.separator + "Variables.xml";
 
-        /*
-        // Überprüfen, ob das Verzeichnis für die XML-Datei existiert, andernfalls erstellen
-        File outputDir = new File(outputPath).getParentFile();
-        if (!outputDir.exists()) {
-            outputDir.mkdirs();
-        }*/
-
         System.out.println("Test createXMLFile " + outputPath);
 
-        // Überprüfen, ob die XML-Datei existiert, andernfalls erstellen
         File outputFile = new File(outputPath);
         if (!outputFile.exists()) {
             try {
@@ -136,55 +213,4 @@ public class WriteVariablesInXML implements StartupActivity {
             }
         }
     }
-
-
-
-    public List<JavaFileData> collectProjectVariables(Project project) {
-        List<JavaFileData> javaFiles = new ArrayList<>();
-        PsiManager psiManager = PsiManager.getInstance(project);
-
-        VirtualFile baseDir = project.getBaseDir();
-        PsiDirectory psiDirectory = psiManager.findDirectory(baseDir);
-
-        if (psiDirectory != null) {
-            psiDirectory.acceptChildren(new PsiRecursiveElementVisitor() {
-                @Override
-                public void visitElement(@NotNull PsiElement element) {
-                    if (element instanceof PsiVariable) {
-                        PsiVariable variable = (PsiVariable) element;
-                        VirtualFile virtualFile = variable.getContainingFile().getVirtualFile();
-
-                        if (virtualFile != null && "java".equalsIgnoreCase(virtualFile.getExtension())) {
-                            long timeStamp = virtualFile.getTimeStamp();
-                            Date lastModifiedDate = new Date(timeStamp);
-                            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-                            String formattedDate = sdf.format(lastModifiedDate);
-
-                            JavaFileData javaFileData = javaFiles.stream()
-                                    .filter(jfd -> jfd.getFileName().equals(virtualFile.getName()))
-                                    .findFirst()
-                                    .orElseGet(() -> {
-                                        JavaFileData newData = new JavaFileData(virtualFile.getName(), formattedDate);
-                                        javaFiles.add(newData);
-                                        return newData;
-                                    });
-
-                            javaFileData.addVariable(variable.getName());
-                        }
-                    }
-                    super.visitElement(element);
-                }
-            });
-        }
-
-        return javaFiles;
-    }
-
-
-
-
-
 }
-
-
-
