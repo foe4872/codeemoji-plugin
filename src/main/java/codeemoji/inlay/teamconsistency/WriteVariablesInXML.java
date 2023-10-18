@@ -27,8 +27,25 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class WriteVariablesInXML implements StartupActivity {
-    private final String path = "C:\\Users\\furka_bas98d7\\OneDrive - FH Vorarlberg\\Bachelorarbeit\\1_testProject";
-    private final String outputPath = path + File.separator + "Variables.xml";
+
+    // das muss dann rausgenommen werden bevor es veröffentlicht wird
+    private final String path;
+    private final String outputPath;
+    WriteVariablesInXML(){
+        // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
+        ProjectManager projectManager = ProjectManager.getInstance();
+        Project[] openProjects = projectManager.getOpenProjects();
+
+        if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
+            path = openProjects[0].getBasePath();
+        } else {
+            // hardcodierten Pfad als Fallback verwenden, weil in Testumgebung es keine openProjects[0].getBasePath() gibt
+            // das muss dann rausgenommen werden bevor es veröffentlicht wird
+            path = "C:\\Users\\furka_bas98d7\\OneDrive - FH Vorarlberg\\Bachelorarbeit\\1_testProject";
+        }
+        outputPath = path + File.separator + "Variables.xml";
+        System.out.println("Test programmstart2 " + outputPath);
+    }
 
     @Override
     public void runActivity(@NotNull Project project) {
