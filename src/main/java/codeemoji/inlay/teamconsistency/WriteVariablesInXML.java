@@ -1,11 +1,15 @@
 package codeemoji.inlay.teamconsistency;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.startup.StartupActivity;
+import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,15 +26,19 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
+import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import com.intellij.openapi.startup.ProjectActivity;
 
-public class WriteVariablesInXML implements StartupActivity {
+public class WriteVariablesInXML implements ProjectActivity {
 
     private final String path;
     private final String outputPath;
-    WriteVariablesInXML(){
+
+    WriteVariablesInXML() {
         // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
         ProjectManager projectManager = ProjectManager.getInstance();
         Project[] openProjects = projectManager.getOpenProjects();
@@ -46,11 +54,17 @@ public class WriteVariablesInXML implements StartupActivity {
         System.out.println("Test programmstart2 " + outputPath);
     }
 
+    @Nullable
     @Override
-    public void runActivity(@NotNull Project project) {
-        createXMLFile();
-        List<JavaFileData> changedFiles = collectProjectVariables(project);
-        writeToXML(changedFiles);
+    public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
+        StartupManager.getInstance(project).runWhenProjectIsInitialized(() -> {
+            ApplicationManager.getApplication().runReadAction(() -> {
+                createXMLFile();
+                List<JavaFileData> changedFiles = collectProjectVariables(project);
+                writeToXML(changedFiles);
+            });
+        });
+        return null;
     }
 
     public List<JavaFileData> readExistingXML() {
@@ -235,8 +249,10 @@ public class WriteVariablesInXML implements StartupActivity {
                 e.printStackTrace();
                 System.err.println("Fehler beim Erstellen der XML-Datei: " + e.getMessage());
             }
-        }else {
+        } else {
             System.out.println("XML-Datei existiert bereits: " + outputPath);
         }
     }
+
+
 }

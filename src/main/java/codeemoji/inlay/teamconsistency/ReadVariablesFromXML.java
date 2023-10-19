@@ -1,9 +1,14 @@
 package codeemoji.inlay.teamconsistency;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.startup.StartupActivity;
+import com.intellij.openapi.startup.StartupManager;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -15,17 +20,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReadVariablesFromXML implements StartupActivity {
+import com.intellij.openapi.startup.ProjectActivity;
+
+public class ReadVariablesFromXML implements ProjectActivity {
 
     private final String path;
 
-    ReadVariablesFromXML(){
+    ReadVariablesFromXML() {
         // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
         ProjectManager projectManager = ProjectManager.getInstance();
         Project[] openProjects = projectManager.getOpenProjects();
 
         if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
-            path = openProjects[0].getBasePath()+ "\\Variables.xml";
+            path = openProjects[0].getBasePath() + "\\Variables.xml";
         } else {
             // hardcodierten Pfad als Fallback verwenden, weil in Testumgebung es keine openProjects[0].getBasePath() gibt
             // das muss dann rausgenommen werden bevor es veröffentlicht wird
@@ -33,22 +40,27 @@ public class ReadVariablesFromXML implements StartupActivity {
         }
     }
 
+    @Nullable
     @Override
-    public void runActivity(@NotNull Project project) {
-        System.out.println("test ReadVariablesFromXML");
+    public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
+        StartupManager.getInstance(project).runWhenProjectIsInitialized(() -> {
+            ApplicationManager.getApplication().runReadAction(() -> {
+                System.out.println("test ReadVariablesFromXML");
 
-        // Lese Variablen aus der XML-Datei
-        List<JavaFileData> variablesFromXML = extractVariablesFromXML(path);
-        for (JavaFileData fileData : variablesFromXML) {
-            System.out.println("Dateiname: " + fileData.getFileName());
-            System.out.println("Letzte Änderung: " + fileData.getLastModified());
-            for (String variable : fileData.getVariables()) {
-                System.out.println("Variable: " + variable);
-            }
-            System.out.println("----");
-        }
+                // Lese Variablen aus der XML-Datei
+                List<JavaFileData> variablesFromXML = extractVariablesFromXML(path);
+                for (JavaFileData fileData : variablesFromXML) {
+                    System.out.println("Dateiname: " + fileData.getFileName());
+                    System.out.println("Letzte Änderung: " + fileData.getLastModified());
+                    for (String variable : fileData.getVariables()) {
+                        System.out.println("Variable: " + variable);
+                    }
+                    System.out.println("----");
+                }
+            });
+        });
+        return null;
     }
-
 
     private List<JavaFileData> extractVariablesFromXML(String xmlFilePath) {
         List<JavaFileData> fileList = new ArrayList<>();
@@ -91,4 +103,5 @@ public class ReadVariablesFromXML implements StartupActivity {
 
         return fileList;
     }
+
 }
