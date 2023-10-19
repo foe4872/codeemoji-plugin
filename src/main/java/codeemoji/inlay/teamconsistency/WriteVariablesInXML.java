@@ -28,7 +28,6 @@ import org.w3c.dom.NodeList;
 
 public class WriteVariablesInXML implements StartupActivity {
 
-    // das muss dann rausgenommen werden bevor es veröffentlicht wird
     private final String path;
     private final String outputPath;
     WriteVariablesInXML(){
@@ -54,7 +53,7 @@ public class WriteVariablesInXML implements StartupActivity {
         writeToXML(changedFiles);
     }
 
-    private List<JavaFileData> readExistingXML() {
+    public List<JavaFileData> readExistingXML() {
         List<JavaFileData> existingData = new ArrayList<>();
         try {
             File xmlFile = new File(outputPath);
@@ -125,7 +124,7 @@ public class WriteVariablesInXML implements StartupActivity {
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "no");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource domSource = new DOMSource(document);
             StreamResult streamResult = new StreamResult(xmlFile);
             transformer.transform(domSource, streamResult);
@@ -175,13 +174,26 @@ public class WriteVariablesInXML implements StartupActivity {
 
                             // Variablen für diese Java-Datei sammeln
                             if (file instanceof PsiJavaFile) {
-                                for (PsiClass psiClass : ((PsiJavaFile) file).getClasses()) {
-                                    for (PsiField psiField : psiClass.getFields()) {
-                                        javaFileData.addVariable(psiField.getName());
+                                file.accept(new JavaRecursiveElementVisitor() {
+                                    @Override
+                                    public void visitField(@NotNull PsiField field) {
+                                        javaFileData.addVariable(field.getName());
+                                        super.visitField(field);
                                     }
-                                }
-                            }
 
+/*                                    @Override
+                                    public void visitParameter(@NotNull PsiParameter parameter) {
+                                        javaFileData.addVariable(parameter.getName());
+                                        super.visitParameter(parameter);
+                                    }*/
+
+                                    @Override
+                                    public void visitLocalVariable(@NotNull PsiLocalVariable variable) {
+                                        javaFileData.addVariable(variable.getName());
+                                        super.visitLocalVariable(variable);
+                                    }
+                                });
+                            }
                         }
                     }
                     super.visitFile(file);

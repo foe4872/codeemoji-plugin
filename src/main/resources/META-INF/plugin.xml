@@ -23,7 +23,7 @@
         <applicationService serviceImplementation="codeemoji.inlay.showingmodifiers.ShowingModifiersSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.showingspecifics.ShowingSpecificsSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.implicit.ImplicitAnnotationsSettings"/>
-        <editorFactoryListener implementation="codeemoji.inlay.nameviolation.VariableSimilarNameGlobal"/>
+        <editorFactoryListener implementation="codeemoji.inlay.teamconsistency.VariableSimilarNameGlobal"/>
 
         <codeInsight.inlayProvider language="JAVA"
                                    implementationClass="codeemoji.inlay.nameviolation.ShortDescriptiveName"/>
