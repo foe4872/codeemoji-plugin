@@ -1,6 +1,7 @@
 package codeemoji.inlay.teamconsistency;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.startup.StartupManager;
@@ -37,11 +38,15 @@ public class WriteVariablesInXML implements ProjectActivity {
 
     private final String path;
     private final String outputPath;
+    private ReadVariablesFromXML _readVariablesFromXML;
 
-    WriteVariablesInXML() {
+
+    public WriteVariablesInXML() {
         // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
         ProjectManager projectManager = ProjectManager.getInstance();
         Project[] openProjects = projectManager.getOpenProjects();
+         _readVariablesFromXML = ServiceManager.getService(ReadVariablesFromXML.class);
+
 
         if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
             path = openProjects[0].getBasePath();
@@ -62,6 +67,7 @@ public class WriteVariablesInXML implements ProjectActivity {
                 createXMLFile();
                 List<JavaFileData> changedFiles = collectProjectVariables(project);
                 writeToXML(changedFiles);
+                _readVariablesFromXML.ExecuteReadVariables();
             });
         });
         return null;

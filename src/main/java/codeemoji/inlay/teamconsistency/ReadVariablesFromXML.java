@@ -1,28 +1,19 @@
 package codeemoji.inlay.teamconsistency;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.startup.StartupActivity;
-import com.intellij.openapi.startup.StartupManager;
-import kotlin.Unit;
-import kotlin.coroutines.Continuation;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.intellij.openapi.startup.ProjectActivity;
 
-public class ReadVariablesFromXML implements ProjectActivity {
+public class ReadVariablesFromXML {
 
     private final String path;
 
@@ -40,26 +31,20 @@ public class ReadVariablesFromXML implements ProjectActivity {
         }
     }
 
-    @Nullable
-    @Override
-    public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
-        StartupManager.getInstance(project).runWhenProjectIsInitialized(() -> {
-            ApplicationManager.getApplication().runReadAction(() -> {
-                System.out.println("test ReadVariablesFromXML");
 
-                // Lese Variablen aus der XML-Datei
-                List<JavaFileData> variablesFromXML = extractVariablesFromXML(path);
-                for (JavaFileData fileData : variablesFromXML) {
-                    System.out.println("Dateiname: " + fileData.getFileName());
-                    System.out.println("Letzte Änderung: " + fileData.getLastModified());
-                    for (String variable : fileData.getVariables()) {
-                        System.out.println("Variable: " + variable);
-                    }
-                    System.out.println("----");
-                }
-            });
-        });
-        return null;
+    public void ExecuteReadVariables() {
+        System.out.println("test ReadVariablesFromXML");
+
+        // Lese Variablen aus der XML-Datei
+        List<JavaFileData> variablesFromXML = extractVariablesFromXML(path);
+        for (JavaFileData fileData : variablesFromXML) {
+            System.out.println("Dateiname: " + fileData.getFileName());
+            System.out.println("Letzte Änderung: " + fileData.getLastModified());
+            for (String variable : fileData.getVariables()) {
+                System.out.println("Variable: " + variable);
+            }
+            System.out.println("----");
+        }
     }
 
     private List<JavaFileData> extractVariablesFromXML(String xmlFilePath) {
