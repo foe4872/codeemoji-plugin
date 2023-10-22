@@ -3,7 +3,7 @@ package codeemoji.inlay.nameviolation;
 import codeemoji.core.util.CESymbol;
 
 
-enum NameViolationSymbols {
+public enum NameViolationSymbols {
     ;
 
     public static final CESymbol SMALL_NAME = new CESymbol(0x1F90F);

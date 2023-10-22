@@ -51,55 +51,57 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
                 return false;
             }
 
-            private boolean areInvertedCamelCases(String name1, String name2) {
-                List<String> wordsName1 = splitCamelCase(name1);
-                List<String> wordsName2 = splitCamelCase(name2);
-                return wordsName1.size() == wordsName2.size() &&
-                        new HashSet<>(wordsName1).equals(new HashSet<>(wordsName2)) &&
-                        !name1.equals(name2);
-            }
-
-            private List<String> splitCamelCase(String s) {
-                List<String> words = new ArrayList<>();
-                StringBuilder currentWord = new StringBuilder();
-                for (char c : s.toCharArray()) {
-                    if (Character.isUpperCase(c) && currentWord.length() > 0) {
-                        words.add(currentWord.toString());
-                        currentWord.setLength(0);
-                    }
-                    currentWord.append(Character.toLowerCase(c));
-                }
-                if (currentWord.length() > 0) {
-                    words.add(currentWord.toString());
-                }
-                return words;
-            }
-
-            private boolean areSynonyms(String word1, String word2) {
-                return synonymDictionary.getOrDefault(word1, Collections.emptyList()).contains(word2) ||
-                        synonymDictionary.getOrDefault(word2, Collections.emptyList()).contains(word1);
-            }
-
-            private boolean hasSynonymousParts(String name1, String name2) {
-                List<String> partsName1 = splitCamelCase(name1);
-                List<String> partsName2 = splitCamelCase(name2);
-
-                for (String part1 : partsName1) {
-                    for (String part2 : partsName2) {
-                        if (areSynonyms(part1, part2)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-
-            private boolean hasSameBaseWithDifferentNumericSuffix(String name1, String name2) {
-                String base1 = name1.replaceAll("\\d+", "");
-                String base2 = name2.replaceAll("\\d+", "");
-                return base1.equals(base2) && !name1.equals(name2);
-            }
-
         };
     }
+
+
+    private boolean areInvertedCamelCases(String name1, String name2) {
+        List<String> wordsName1 = splitCamelCase(name1);
+        List<String> wordsName2 = splitCamelCase(name2);
+        return wordsName1.size() == wordsName2.size() &&
+                new HashSet<>(wordsName1).equals(new HashSet<>(wordsName2)) &&
+                !name1.equals(name2);
+    }
+
+    private List<String> splitCamelCase(String s) {
+        List<String> words = new ArrayList<>();
+        StringBuilder currentWord = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (Character.isUpperCase(c) && currentWord.length() > 0) {
+                words.add(currentWord.toString());
+                currentWord.setLength(0);
+            }
+            currentWord.append(Character.toLowerCase(c));
+        }
+        if (currentWord.length() > 0) {
+            words.add(currentWord.toString());
+        }
+        return words;
+    }
+
+    private boolean areSynonyms(String word1, String word2) {
+        return synonymDictionary.getOrDefault(word1, Collections.emptyList()).contains(word2) ||
+                synonymDictionary.getOrDefault(word2, Collections.emptyList()).contains(word1);
+    }
+
+    private boolean hasSynonymousParts(String name1, String name2) {
+        List<String> partsName1 = splitCamelCase(name1);
+        List<String> partsName2 = splitCamelCase(name2);
+
+        for (String part1 : partsName1) {
+            for (String part2 : partsName2) {
+                if (areSynonyms(part1, part2)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasSameBaseWithDifferentNumericSuffix(String name1, String name2) {
+        String base1 = name1.replaceAll("\\d+", "");
+        String base2 = name2.replaceAll("\\d+", "");
+        return base1.equals(base2) && !name1.equals(name2);
+    }
+
 }

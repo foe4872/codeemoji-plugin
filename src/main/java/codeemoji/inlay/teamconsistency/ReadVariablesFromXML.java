@@ -16,6 +16,10 @@ import java.util.List;
 public class ReadVariablesFromXML {
 
     private final String path;
+    private List<JavaFileData> variablesFromXML = new ArrayList<>();
+    public List<JavaFileData> getVariablesFromXML() {
+        return this.variablesFromXML;
+    }
 
     ReadVariablesFromXML() {
         // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
@@ -36,15 +40,15 @@ public class ReadVariablesFromXML {
         System.out.println("test ReadVariablesFromXML");
 
         // Lese Variablen aus der XML-Datei
-        List<JavaFileData> variablesFromXML = extractVariablesFromXML(path);
-        for (JavaFileData fileData : variablesFromXML) {
+        this.variablesFromXML = extractVariablesFromXML(path);
+/*        for (JavaFileData fileData : variablesFromXML) {
             System.out.println("Dateiname: " + fileData.getFileName());
             System.out.println("Letzte Änderung: " + fileData.getLastModified());
             for (String variable : fileData.getVariables()) {
                 System.out.println("Variable: " + variable);
             }
             System.out.println("----");
-        }
+        }*/
     }
 
     private List<JavaFileData> extractVariablesFromXML(String xmlFilePath) {
