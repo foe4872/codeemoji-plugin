@@ -5,46 +5,41 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.EditorFactoryEvent;
 import com.intellij.openapi.editor.event.EditorFactoryListener;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupManager;
+import com.intellij.openapi.project.ProjectManager;
 import org.jetbrains.annotations.NotNull;
-import kotlin.Unit;
-import kotlin.coroutines.Continuation;
-import com.intellij.openapi.startup.ProjectActivity;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class VariableSimilarNameGlobal implements ProjectActivity {
+public class VariableSimilarNameGlobal {
 
-    @Nullable
-    @Override
-    public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
-        StartupManager.getInstance(project).runWhenProjectIsInitialized(() -> {
+    public VariableSimilarNameGlobal() {
+        //initializeListener();
+    }
 
-            // Hier wird ein Listener zum EditorFactory hinzugefügt, der darauf wartet, dass ein neuer Editor in IntelliJ erstellt wird.
-            // Sobald ein neuer Editor geöffnet wird, wird die Methode `editorCreated` aufgerufen.
-            EditorFactory.getInstance().addEditorFactoryListener(new EditorFactoryListener() {
-                @Override
-                public void editorCreated(@NotNull EditorFactoryEvent event) {
-                    System.out.println("Ein Editor wurde geöffnet!");
+    public void initializeListener() {
+        ProjectManager projectManager = ProjectManager.getInstance();
+        Project project = projectManager.getDefaultProject();
 
-                    // Holen Sie sich die Instanz von ReadVariablesFromXML
-                    ReadVariablesFromXML readService = ServiceManager.getService(ReadVariablesFromXML.class);
-                    // Abrufen der bereits gelesenen Variablen aus der XML-Datei
-                    List<JavaFileData> variablesFromXML = readService.getVariablesFromXML();
+        EditorFactory.getInstance().addEditorFactoryListener(new EditorFactoryListener() {
+            @Override
+            public void editorCreated(@NotNull EditorFactoryEvent event) {
+                System.out.println("Ein Editor wurde geöffnet!");
 
-                    // Ausgabe der Daten
-                    for (JavaFileData fileData : variablesFromXML) {
-                        System.out.println("Dateiname: " + fileData.getFileName());
-                        System.out.println("Letzte Änderung: " + fileData.getLastModified());
-                        for (String variable : fileData.getVariables()) {
-                            System.out.println("Variable: " + variable);
-                        }
-                        System.out.println("----");
+                // Instanz von ReadVariablesFromXML abrufen
+                ReadVariablesFromXML readService = ServiceManager.getService(ReadVariablesFromXML.class);
+                // Abrufen der bereits gelesenen Variablen aus der XML-Datei
+                List<JavaFileData> variablesFromXML = readService.getVariablesFromXML();
+
+                // Daten ausgeben
+                for (JavaFileData fileData : variablesFromXML) {
+                    System.out.println("Dateiname: " + fileData.getFileName());
+                    System.out.println("Letzte Änderung: " + fileData.getLastModified());
+                    for (String variable : fileData.getVariables()) {
+                        System.out.println("Variable: " + variable);
                     }
+                    System.out.println("----");
                 }
-            }, project);
-        });
-        return null;
+            }
+        }, project);
     }
 }

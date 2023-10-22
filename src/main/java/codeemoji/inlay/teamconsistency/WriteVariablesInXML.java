@@ -39,6 +39,7 @@ public class WriteVariablesInXML implements ProjectActivity {
     private final String path;
     private final String outputPath;
     private ReadVariablesFromXML _readVariablesFromXML;
+    private VariableSimilarNameGlobal _variableSimilarNameGlobal;
 
 
     public WriteVariablesInXML() {
@@ -46,7 +47,7 @@ public class WriteVariablesInXML implements ProjectActivity {
         ProjectManager projectManager = ProjectManager.getInstance();
         Project[] openProjects = projectManager.getOpenProjects();
          _readVariablesFromXML = ServiceManager.getService(ReadVariablesFromXML.class);
-
+        _variableSimilarNameGlobal = ServiceManager.getService(VariableSimilarNameGlobal.class);
 
         if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
             path = openProjects[0].getBasePath();
@@ -68,6 +69,7 @@ public class WriteVariablesInXML implements ProjectActivity {
                 List<JavaFileData> changedFiles = collectProjectVariables(project);
                 writeToXML(changedFiles);
                 _readVariablesFromXML.ExecuteReadVariables();
+                _variableSimilarNameGlobal.initializeListener();
             });
         });
         return null;
