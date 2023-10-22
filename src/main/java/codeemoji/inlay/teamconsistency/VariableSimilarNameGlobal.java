@@ -1,79 +1,50 @@
 package codeemoji.inlay.teamconsistency;
 
-import codeemoji.core.collector.simple.CEVariableCollector;
-import codeemoji.core.provider.CEProvider;
-import com.intellij.codeInsight.hints.InlayHintsCollector;
-import com.intellij.codeInsight.hints.NoSettings;
 import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.EditorFactoryEvent;
 import com.intellij.openapi.editor.event.EditorFactoryListener;
-import com.intellij.psi.PsiVariable;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.startup.StartupManager;
 import org.jetbrains.annotations.NotNull;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import com.intellij.openapi.startup.ProjectActivity;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.List;
 
-import static codeemoji.inlay.nameviolation.NameViolationSymbols.POOP;
-
-
-public class VariableSimilarNameGlobal extends CEProvider<NoSettings> {
-    private final EditorFactoryListener myListener = new EditorFactoryListener() {
-        @Override
-        public void editorCreated(@NotNull EditorFactoryEvent event) {
-            // Ihre Logik, die beim Erstellen eines Editors ausgeführt wird
-            Editor editor = event.getEditor();
-
-            //buildCollector(editor);
-
-            // Holen Sie sich die Instanz von ReadVariablesFromXML
-            ReadVariablesFromXML readService = ServiceManager.getService(ReadVariablesFromXML.class);
-
-            // Abrufen der bereits gelesenen Variablen aus der XML-Datei
-            List<JavaFileData> variablesFromXML = readService.getVariablesFromXML();
-
-            // Ausgabe der Daten
-            for (JavaFileData fileData : variablesFromXML) {
-                System.out.println("Dateiname: " + fileData.getFileName());
-                System.out.println("Letzte Änderung: " + fileData.getLastModified());
-                for (String variable : fileData.getVariables()) {
-                    System.out.println("Variable: " + variable);
-                }
-                System.out.println("----");
-            }
-        }
-
-    };
-
-/*    public VariableSimilarNameGlobal() {
-        EditorFactory.getInstance().addEditorFactoryListener(myListener, (disposable) -> {
-            // Aufräumarbeiten, falls nötig, z.B. Listener entfernen
-            EditorFactory.getInstance().removeEditorFactoryListener(myListener);
-        });
-    }*/
+public class VariableSimilarNameGlobal implements ProjectActivity {
 
     @Nullable
     @Override
-    public String getPreviewText() {
+    public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
+        StartupManager.getInstance(project).runWhenProjectIsInitialized(() -> {
+
+            // Hier wird ein Listener zum EditorFactory hinzugefügt, der darauf wartet, dass ein neuer Editor in IntelliJ erstellt wird.
+            // Sobald ein neuer Editor geöffnet wird, wird die Methode `editorCreated` aufgerufen.
+            EditorFactory.getInstance().addEditorFactoryListener(new EditorFactoryListener() {
+                @Override
+                public void editorCreated(@NotNull EditorFactoryEvent event) {
+                    System.out.println("Ein Editor wurde geöffnet!");
+
+                    // Holen Sie sich die Instanz von ReadVariablesFromXML
+                    ReadVariablesFromXML readService = ServiceManager.getService(ReadVariablesFromXML.class);
+                    // Abrufen der bereits gelesenen Variablen aus der XML-Datei
+                    List<JavaFileData> variablesFromXML = readService.getVariablesFromXML();
+
+                    // Ausgabe der Daten
+                    for (JavaFileData fileData : variablesFromXML) {
+                        System.out.println("Dateiname: " + fileData.getFileName());
+                        System.out.println("Letzte Änderung: " + fileData.getLastModified());
+                        for (String variable : fileData.getVariables()) {
+                            System.out.println("Variable: " + variable);
+                        }
+                        System.out.println("----");
+                    }
+                }
+            }, project);
+        });
         return null;
     }
-
-    @NotNull
-    @Override
-    public InlayHintsCollector buildCollector(@NotNull Editor editor) {
-        // Ihre ursprüngliche Logik zur Erstellung des Collectors
-        return new CEVariableCollector(editor, getKeyId(), POOP) {
-            @Override
-            public boolean needsHint(@NotNull PsiVariable element, @NotNull Map<?, ?> externalInfo) {
-                return false;
-            }
-        };
-    }
-
-    public void myMethod1() {
-        // Ihre Methode, die beim Öffnen eines Editors aufgerufen wird
-    }
 }
-
-
