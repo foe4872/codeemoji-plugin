@@ -24,7 +24,7 @@
         <applicationService serviceImplementation="codeemoji.inlay.showingspecifics.ShowingSpecificsSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.implicit.ImplicitAnnotationsSettings"/>
         <applicationService serviceImplementation="codeemoji.inlay.teamconsistency.ReadVariablesFromXML"/>
-        <applicationService serviceImplementation="codeemoji.inlay.teamconsistency.VariableSimilarNameGlobal"/>
+<!--        <applicationService serviceImplementation="codeemoji.inlay.teamconsistency.VariableSimilarNameGlobal"/>-->
 
         <codeInsight.inlayProvider language="JAVA"
                                    implementationClass="codeemoji.inlay.nameviolation.ShortDescriptiveName"/>
@@ -62,5 +62,7 @@
                                    implementationClass="codeemoji.inlay.implicit.ImplicitAnnotations"/>
         <codeInsight.inlayProvider language="JAVA"
                                    implementationClass="codeemoji.inlay.nameviolation.VariableSimilarName"/>
+        <codeInsight.inlayProvider language="JAVA"
+                                   implementationClass="codeemoji.inlay.teamconsistency.VariableSimilarNameGlobal"/>
     </extensions>
 </idea-plugin>
