@@ -13,6 +13,4 @@ public enum NameViolationSymbols {
     public static final CESymbol CRYING = new CESymbol(0x1F622);
     public static final CESymbol POOP = new CESymbol(0x1F4A9);
     public static final CESymbol INVERTEDEXISTS = new CESymbol(0x1F504);
-
-
 }
