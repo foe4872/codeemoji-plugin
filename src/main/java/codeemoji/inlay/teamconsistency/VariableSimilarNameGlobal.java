@@ -9,8 +9,10 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.*;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiVariable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,51 +24,30 @@ import java.util.Map;
 
 import static codeemoji.inlay.nameviolation.NameViolationSymbols.INVERTEDEXISTS;
 
-public class VariableSimilarNameGlobal extends CEProvider<NoSettings> implements EditorFactoryListener, Disposable {
+public class VariableSimilarNameGlobal extends CEProvider<NoSettings> {
     private List<JavaFileData> variablesFromXML;
     private boolean initialized = false;
-    private Disposable parentDisposable; // Entfernte die problematische Zeile
-
-    public VariableSimilarNameGlobal() {
-        parentDisposable = new Disposable() { // Erzeugt ein neues Disposable
-            @Override
-            public void dispose() {
-                // Hier können Sie zusätzliche Aufräumarbeiten durchführen, wenn das Parent-Disposable verworfen wird.
-            }
-        };
-        EditorFactory.getInstance().addEditorFactoryListener(this, parentDisposable);
-    }
-
-    @Override
-    public void editorCreated(@NotNull EditorFactoryEvent event) {
-        if (!initialized) {
-            // Initialisierungslogik für Inlay-Hinweise
-            Project project = ProjectManager.getInstance().getDefaultProject();
-            System.out.println("Ein Editor wurde geöffnet!");
-            // Instanz von ReadVariablesFromXML abrufen
-            ReadVariablesFromXML readService = ServiceManager.getService(ReadVariablesFromXML.class);
-            // Abrufen der bereits gelesenen Variablen aus der XML-Datei
-            variablesFromXML = readService.getVariablesFromXML();
-            initialized = true;
-        }
-    }
-
-    @Override
-    public void editorReleased(@NotNull EditorFactoryEvent event) {
-        // Zusätzliche Aufräumarbeiten, wenn ein Editor geschlossen wird
-    }
 
     @Override
     protected InlayHintsCollector buildCollector(@NotNull Editor editor) {
+        VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
+        String currentFileName = virtualFile != null ? virtualFile.getName() : null;
+
+        ReadVariablesFromXML readService = ServiceManager.getService(ReadVariablesFromXML.class);
+        // Abrufen der bereits gelesenen Variablen aus der XML-Datei
+        variablesFromXML = readService.getVariablesFromXML();
+
         return new CEVariableCollector(editor, getKeyId(), INVERTEDEXISTS) {
             @Override
             public boolean needsHint(@NotNull PsiVariable element, @NotNull Map<?, ?> externalInfo) {
                 String currentVarName = element.getName();
                 for (JavaFileData fileData : variablesFromXML) {
-                    for (String otherVarName : fileData.getVariables()) {
-                        if (areInvertedCamelCases(currentVarName, otherVarName)) {
-                            System.out.println("The variable " + currentVarName + " is an inverted camel case of " + otherVarName);
-                            return true;
+                    if (currentFileName != null && !fileData.getFileName().equals(currentFileName)) {
+                        for (String otherVarName : fileData.getVariables()) {
+                            if (areInvertedCamelCases(currentVarName, otherVarName)) {
+                                //System.out.println("The variable " + currentVarName + " is an inverted camel case of " + otherVarName);
+                                return true;
+                            }
                         }
                     }
                 }
@@ -74,6 +55,7 @@ public class VariableSimilarNameGlobal extends CEProvider<NoSettings> implements
             }
         };
     }
+
     private boolean areInvertedCamelCases(String name1, String name2) {
         List<String> wordsName1 = splitCamelCase(name1);
         List<String> wordsName2 = splitCamelCase(name2);
@@ -103,8 +85,4 @@ public class VariableSimilarNameGlobal extends CEProvider<NoSettings> implements
         return null;
     }
 
-    @Override
-    public void dispose() {
-        parentDisposable.dispose();
-    }
 }
