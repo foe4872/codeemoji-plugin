@@ -4,19 +4,13 @@ import codeemoji.core.collector.simple.CEVariableCollector;
 import codeemoji.core.provider.CEProvider;
 import com.intellij.codeInsight.hints.InlayHintsCollector;
 import com.intellij.codeInsight.hints.NoSettings;
-import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.event.*;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiVariable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +20,6 @@ import static codeemoji.inlay.nameviolation.NameViolationSymbols.INVERTEDEXISTS;
 
 public class VariableSimilarNameGlobal extends CEProvider<NoSettings> {
     private List<JavaFileData> variablesFromXML;
-    private boolean initialized = false;
 
     @Override
     protected InlayHintsCollector buildCollector(@NotNull Editor editor) {
