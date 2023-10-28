@@ -16,20 +16,11 @@ import static codeemoji.inlay.nameviolation.NameViolationSymbols.POOP;
 public class VariableSimilarName extends CEProvider<NoSettings> {
     private final Set<String> variableNames = new HashSet<>();
     private final Map<String, List<String>> synonymDictionary = new HashMap<>();
-    public Set<String> getCollectedVariableNames() {
-        return variableNames;
-    }
-
     public VariableSimilarName() {
         synonymDictionary.put("cost", Arrays.asList("price", "charge", "fee"));
         synonymDictionary.put("animal", Arrays.asList("beast", "creature"));
         synonymDictionary.put("car", Arrays.asList("vehicle", "automobile", "machine"));
         // hier weitere Synonyme hinzufügen ...
-    }
-
-    @Override
-    public String getPreviewText() {
-        return "";
     }
 
     @Override
@@ -53,7 +44,6 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
 
         };
     }
-
 
     private boolean areInvertedCamelCases(String name1, String name2) {
         List<String> wordsName1 = splitCamelCase(name1);
@@ -102,6 +92,11 @@ public class VariableSimilarName extends CEProvider<NoSettings> {
         String base1 = name1.replaceAll("\\d+", "");
         String base2 = name2.replaceAll("\\d+", "");
         return base1.equals(base2) && !name1.equals(name2);
+    }
+
+    @Override
+    public String getPreviewText() {
+        return "";
     }
 
 }
