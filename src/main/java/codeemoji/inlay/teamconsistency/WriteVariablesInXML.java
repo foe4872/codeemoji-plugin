@@ -44,7 +44,6 @@ public class WriteVariablesInXML implements ProjectActivity {
         ProjectManager projectManager = ProjectManager.getInstance();
         Project[] openProjects = projectManager.getOpenProjects();
          _readVariablesFromXML = ServiceManager.getService(ReadVariablesFromXML.class);
-        //_variableSimilarNameGlobal = ServiceManager.getService(VariableSimilarNameGlobal.class);
 
         if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
             path = openProjects[0].getBasePath();
@@ -54,7 +53,6 @@ public class WriteVariablesInXML implements ProjectActivity {
             path = "C:\\Users\\furka_bas98d7\\OneDrive - FH Vorarlberg\\Bachelorarbeit\\1_testProject";
         }
         outputPath = path + File.separator + "Variables.xml";
-        System.out.println("Test programmstart2 " + outputPath);
     }
 
     @Nullable
@@ -65,7 +63,7 @@ public class WriteVariablesInXML implements ProjectActivity {
                 createXMLFile();
                 List<JavaFileData> changedFiles = collectProjectVariables(project);
                 writeToXML(changedFiles);
-                _readVariablesFromXML.ExecuteReadVariables();
+                _readVariablesFromXML.ExecuteReadVariables(outputPath);
             });
         });
         return null;
