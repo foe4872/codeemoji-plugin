@@ -12,24 +12,15 @@ public class JavaFileData {
         this.fileName = fileName;
         this.lastModified = lastModified;
     }
-
     public String getFileName() {
         return fileName;
     }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
     public String getLastModified() {
         return lastModified;
     }
-
     public List<String> getVariables() {
         return variables;
     }
-
-    // Methode zum Hinzufügen einer Variable
     public void addVariable(String variableName) {
         this.variables.add(variableName);
     }
