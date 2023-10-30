@@ -35,12 +35,9 @@ import org.w3c.dom.NodeList;
 import com.intellij.openapi.startup.ProjectActivity;
 
 public class WriteVariablesInXML implements ProjectActivity {
-
     private final String path;
     private final String outputPath;
     private ReadVariablesFromXML _readVariablesFromXML;
-    //private VariableSimilarNameGlobal _variableSimilarNameGlobal;
-
 
     public WriteVariablesInXML() {
         // Ermitteln des Projekt-Verzeichnisses und Pfad zur XML-Datei
@@ -69,7 +66,6 @@ public class WriteVariablesInXML implements ProjectActivity {
                 List<JavaFileData> changedFiles = collectProjectVariables(project);
                 writeToXML(changedFiles);
                 _readVariablesFromXML.ExecuteReadVariables();
-               // _variableSimilarNameGlobal.initializeListener();
             });
         });
         return null;
@@ -106,7 +102,6 @@ public class WriteVariablesInXML implements ProjectActivity {
             DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
             Document document;
             File xmlFile = new File(outputPath);
-
             if (xmlFile.exists()) {
                 document = documentBuilder.parse(xmlFile);
             } else {
@@ -146,7 +141,7 @@ public class WriteVariablesInXML implements ProjectActivity {
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
             DOMSource domSource = new DOMSource(document);
             StreamResult streamResult = new StreamResult(xmlFile);
             transformer.transform(domSource, streamResult);
@@ -156,13 +151,11 @@ public class WriteVariablesInXML implements ProjectActivity {
             } else {
                 System.out.println("XML-Datei wurde erfolgreich aktualisiert!");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Fehler beim Schreiben in die XML-Datei: " + e.getMessage());
         }
     }
-
 
     public List<JavaFileData> collectProjectVariables(Project project) {
         List<JavaFileData> javaFiles = new ArrayList<>();
@@ -202,13 +195,6 @@ public class WriteVariablesInXML implements ProjectActivity {
                                         javaFileData.addVariable(field.getName());
                                         super.visitField(field);
                                     }
-
-/*                                    @Override
-                                    public void visitParameter(@NotNull PsiParameter parameter) {
-                                        javaFileData.addVariable(parameter.getName());
-                                        super.visitParameter(parameter);
-                                    }*/
-
                                     @Override
                                     public void visitLocalVariable(@NotNull PsiLocalVariable variable) {
                                         javaFileData.addVariable(variable.getName());
@@ -222,24 +208,10 @@ public class WriteVariablesInXML implements ProjectActivity {
                 }
             });
         }
-
         return javaFiles;
     }
 
     public void createXMLFile() {
-        ProjectManager projectManager = ProjectManager.getInstance();
-        Project[] openProjects = projectManager.getOpenProjects();
-        String projectPath;
-
-        if (openProjects.length > 0 && openProjects[0].getBasePath() != null) {
-            projectPath = openProjects[0].getBasePath();
-        } else {
-            projectPath = path;
-        }
-        String outputPath = projectPath + File.separator + "Variables.xml";
-
-        System.out.println("Test createXMLFile " + outputPath);
-
         File outputFile = new File(outputPath);
         if (!outputFile.exists()) {
             try {
@@ -261,6 +233,4 @@ public class WriteVariablesInXML implements ProjectActivity {
             System.out.println("XML-Datei existiert bereits: " + outputPath);
         }
     }
-
-
 }

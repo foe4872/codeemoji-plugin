@@ -12,9 +12,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class ReadVariablesFromXML {
-
     private final String path;
     private List<JavaFileData> variablesFromXML = new ArrayList<>();
     public List<JavaFileData> getVariablesFromXML() {
@@ -35,20 +33,10 @@ public class ReadVariablesFromXML {
         }
     }
 
-
     public void ExecuteReadVariables() {
         System.out.println("test ReadVariablesFromXML");
-
         // Lese Variablen aus der XML-Datei
         this.variablesFromXML = extractVariablesFromXML(path);
-/*        for (JavaFileData fileData : variablesFromXML) {
-            System.out.println("Dateiname: " + fileData.getFileName());
-            System.out.println("Letzte Änderung: " + fileData.getLastModified());
-            for (String variable : fileData.getVariables()) {
-                System.out.println("Variable: " + variable);
-            }
-            System.out.println("----");
-        }*/
     }
 
     private List<JavaFileData> extractVariablesFromXML(String xmlFilePath) {
@@ -89,7 +77,6 @@ public class ReadVariablesFromXML {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return fileList;
     }
 

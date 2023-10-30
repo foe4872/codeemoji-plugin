@@ -8,13 +8,11 @@ public class JavaFileData {
     private String lastModified;
     private List<String> variables = new ArrayList<>();
 
-    // Konstruktor
     public JavaFileData(String fileName, String lastModified) {
         this.fileName = fileName;
         this.lastModified = lastModified;
     }
 
-    // Getter und Setter für fileName
     public String getFileName() {
         return fileName;
     }
@@ -23,16 +21,10 @@ public class JavaFileData {
         this.fileName = fileName;
     }
 
-    // Getter und Setter für lastModified
     public String getLastModified() {
         return lastModified;
     }
 
-    public void setLastModified(String lastModified) {
-        this.lastModified = lastModified;
-    }
-
-    // Getter für variables (Setter nicht notwendig, da wir die Liste direkt manipulieren können)
     public List<String> getVariables() {
         return variables;
     }
