@@ -65,7 +65,8 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
             if (currentElement instanceof PsiCodeBlock
                     || currentElement instanceof PsiMethod
                     || currentElement instanceof PsiClass
-                    || currentElement instanceof PsiCatchSection) {  // Add this line
+                    || currentElement instanceof PsiCatchSection
+                    || currentElement instanceof PsiLoopStatement) {
                 break;
             }
             currentElement = currentElement.getParent();
