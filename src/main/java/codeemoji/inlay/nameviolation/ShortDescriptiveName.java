@@ -97,6 +97,4 @@ public class ShortDescriptiveName extends CEProvider<ShortDescriptiveNameSetting
         }
         return isBigScope;
     }
-
-
 }
